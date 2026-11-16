@@ -1,0 +1,15 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: formlabs-helloapp
+  labels:
+    app: formlabs-helloapp
+spec:
+  type: ClusterIP
+  selector:
+    app: formlabs-helloapp
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
