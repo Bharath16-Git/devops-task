@@ -1,6 +1,6 @@
-Formlabs DevOps Home Assignment
+# Formlabs DevOps Home Assignment
 
-Overview
+# Overview
 
 This repository contains my implementation of the Formlabs DevOps take-home assignment.
 
@@ -8,38 +8,23 @@ The provided application is a small Python Flask service that returns Hello, Wor
 
 I used Docker, Kubernetes, and GitHub Actions. I kept the implementation straightforward, with a focus on repeatable deployments, basic container security, health checks, and validation at each stage.
 
-Tech Stack
+## Tech Stack
 
-Component
 
-Technology
+| Component | Technology |
+|---|---|
+| Application | Python 3.11, Flask, Gunicorn |
+| Containerization | Docker |
+| Orchestration | Kubernetes |
+| CI/CD | GitHub Actions |
+| Local Kubernetes | Docker Desktop |
+| CI Kubernetes | kind |
 
-Application
 
-Python 3.11, Flask, Gunicorn
+## Repository Structure
 
-Containerization
 
-Docker
-
-Orchestration
-
-Kubernetes
-
-CI/CD
-
-GitHub Actions
-
-Local Kubernetes
-
-Docker Desktop
-
-CI Kubernetes
-
-kind
-
-Repository Structure
-
+```text
 devops-task/
 ├── .github/
 │   └── workflows/
@@ -59,10 +44,12 @@ devops-task/
 ├── run.sh
 ├── test.sh
 └── README.md
+```
+
 
 The Flask application, its tests, and the original shell scripts were provided in the starter repository.
 
-1. Containerization
+## 1. Containerization
 
 I created a Dockerfile using python:3.11-slim as the base image.
 
@@ -70,15 +57,19 @@ The Dockerfile installs the dependencies from requirements.txt, copies the appli
 
 I also configured the container to run under a non-root user and added a .dockerignore file to keep unnecessary files out of the build context.
 
-Build the image
+### Build the image
 
+```powershell
 docker build -t formlabs-helloapp:local .
+```
 
-Run the container
+### Run the container
 
+```powershell
 docker run -d --name formlabs-app -p 8080:8080 formlabs-helloapp:local
+```
 
-Verify
+### Verify
 
 curl http://localhost:8080
 
@@ -88,7 +79,7 @@ Expected response:
 
 I verified the image locally and confirmed that the container returned HTTP 200.
 
-2. Kubernetes Deployment
+## 2. Kubernetes Deployment
 
 I created a Kubernetes Deployment and Service using standard YAML manifests.
 
@@ -104,7 +95,7 @@ The Service uses ClusterIP and forwards traffic from port 80 to container port 8
 
 I used standard Kubernetes manifests instead of Helm because the application only requires a Deployment and Service. For this scope, plain YAML is easier to review and maintain.
 
-Local Kubernetes setup
+### Local Kubernetes setup
 
 The application image must be loaded into the Kubernetes node before deployment.
 
@@ -118,13 +109,13 @@ docker exec desktop-control-plane ctr -n k8s.io images import /root/formlabs-hel
 
 The node name may differ depending on the local cluster configuration.
 
-Deploy the application
+### Deploy the application
 
 kubectl apply -f kubernetes/
 kubectl rollout status deployment/formlabs-helloapp
 kubectl get pods -l app=formlabs-helloapp
 
-Access the Service
+### Access the Service
 
 kubectl port-forward service/formlabs-helloapp 8081:80
 
@@ -134,7 +125,7 @@ curl http://localhost:8081
 
 During local testing, both replicas reached the Ready state, and the Service returned HTTP 200 with the expected application response.
 
-3. CI/CD Automation
+## 3. CI/CD Automation
 
 The GitHub Actions workflow is defined in .github/workflows/ci-cd.yml.
 
@@ -162,7 +153,7 @@ Verifies the application response through the Kubernetes Service.
 
 The workflow fails if the unit tests, image build, deployment rollout, or HTTP verification fails.
 
-CI environment
+### CI environment
 
 I used kind to create a temporary Kubernetes environment within GitHub Actions.
 
@@ -174,7 +165,7 @@ During the first CI run, the image-loading step failed because it referenced the
 
 The successful run can be reviewed under the repository's GitHub Actions tab.
 
-4. Design Decisions
+## 4. Design Decisions
 
 Docker: I used a Python slim image and a non-root user. This keeps the container setup relatively lightweight and avoids running the application with unnecessary root privileges.
 
@@ -186,49 +177,26 @@ kind: I selected kind for CI because it provides a lightweight Kubernetes cluste
 
 Plain YAML: I avoided Helm and additional infrastructure tooling because they would add complexity without much benefit for a single application Deployment and Service.
 
-5. Testing and Validation
+## 5. Testing and Validation
 
 I tested the application locally before configuring the automated deployment workflow.
 
-Validation
 
-Result
+| Validation | Result |
+|---|---|
+| Docker image build | Passed |
+| Container startup | Passed |
+| Local application HTTP test | HTTP 200 |
+| Kubernetes rollout | Passed |
+| Kubernetes replicas | 2/2 Ready |
+| Kubernetes Service HTTP test | HTTP 200 |
+| Python unit tests in CI | Passed |
+| GitHub Actions workflow | Passed |
 
-Docker image build
-
-Passed
-
-Container startup
-
-Passed
-
-Local application HTTP test
-
-HTTP 200
-
-Kubernetes rollout
-
-Passed
-
-Kubernetes replicas
-
-2/2 Ready
-
-Kubernetes Service HTTP test
-
-HTTP 200
-
-Python unit tests in CI
-
-Passed
-
-GitHub Actions workflow
-
-Passed
 
 The local Kubernetes deployment and CI pipeline both returned the expected Hello, World! response.
 
-6. Production Considerations
+## 6. Production Considerations
 
 The current setup is intended to demonstrate the requested DevOps workflow. It is not a persistent production deployment.
 
